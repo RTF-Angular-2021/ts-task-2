@@ -1,0 +1,24 @@
+{
+  "name": "ts-task-1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx tsc src/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RTF-Angular-2021/ts-task-1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RTF-Angular-2021/ts-task-1/issues"
+  },
+  "homepage": "https://github.com/RTF-Angular-2021/ts-task-1#readme",
+  "dependencies": {
+    "tsc": "^1.20150623.0"
+  },
+  "devDependencies": {}
+}

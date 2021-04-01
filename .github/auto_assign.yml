@@ -1,0 +1,9 @@
+addReviewers: false
+
+addAssignees: true
+
+assignees:
+  - Toouren
+  - MishaAbrosimov
+
+numberOfAssignees: 1
