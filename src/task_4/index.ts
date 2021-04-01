@@ -15,7 +15,7 @@
  * 	  пользуясь уже предоставленными интерфейсами (избавиться от всех any типов)
 */
 
-import { Currency, UserSettingOptions } from '../enums';
+import { Currency } from '../enums';
 
 export class CurrencyConverterModule {
 	private _moneyRepository: any;
