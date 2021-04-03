@@ -35,7 +35,7 @@ class BankTerminal {
 		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
 	}
 
-	public authorizeUser(user: any): any {
+	public authorizeUser(user: any, card: any, cardPin: any): any {
 
 	}
 
