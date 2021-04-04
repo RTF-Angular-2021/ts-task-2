@@ -31,16 +31,27 @@ export interface IMoneyUnit {
 }
 
 export class MoneyRepository {
-	private _repository: any;
-	constructor(initialRepository: any) {
+	private _repository: Array<object>;
+	constructor(initialRepository: Array<object>) {
 		this._repository = initialRepository;
 	}
 
-	public giveOutMoney(count: any, currency: any): any {
-
+	public giveOutMoney(count: number, currency: Currency): boolean {
+		let copyCount = count;
+		this._repository.forEach(item => {
+			for (let key in item) {
+				//сравниваю по индексу валюты currency - 0 (RUB) или 1 (USD)
+                if (item['moneyInfo']['currency'] === currency  && copyCount >= item['count']) {
+                    copyCount -= item['count'];
+                    item['count'] = 0;
+                } 
+            }
+		});
+		
+		return copyCount === 0 ? true : false;
 	}
 
-	public takeMoney(moneyUnits: any): any {
-
+	public takeMoney(moneyUnits: IMoneyUnit): void {
+		this._repository.push(moneyUnits);
 	}
 }
