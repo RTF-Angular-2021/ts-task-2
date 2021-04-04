@@ -16,15 +16,40 @@
 */
 
 import { Currency } from '../enums';
+import { IMoneyUnit, MoneyRepository } from '../task_1';
 
 export class CurrencyConverterModule {
-	private _moneyRepository: any;
+	private _moneyRepository: MoneyRepository;
 
-	constructor(initialMoneyRepository: any) {
+	constructor(initialMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initialMoneyRepository;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): Array<IMoneyUnit> {
+		let multiply: number;
+		if (fromCurrency === Currency.USD && toCurrency === Currency.RUB) {
+			multiply = 70;
+		} else if (fromCurrency === Currency.RUB && toCurrency === Currency.USD) {
+			multiply = 1 / 70;
+		} else {
+			return null;
+		}
 
+		let sum: number = 0;
+		for (let moneyUnit of moneyUnits) {
+			sum += moneyUnit.count * Number(moneyUnit.moneyInfo.denomination)
+			if (!this._moneyRepository.giveOutMoney(moneyUnit.count * Number(moneyUnit.moneyInfo.denomination), moneyUnit.moneyInfo.currency)) {
+				return null;
+			}
+		}
+
+		let convertedSum: number = sum * multiply;
+		let convertedMoneyUnits: Array<IMoneyUnit> = this._moneyRepository.convertCountToMoneyUnits(convertedSum, toCurrency, true);
+		if (convertedMoneyUnits !== null) {
+			this._moneyRepository.takeMoney(convertedMoneyUnits);
+			return convertedMoneyUnits;
+		}
+
+		return null;
 	}
 }

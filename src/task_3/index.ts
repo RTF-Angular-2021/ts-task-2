@@ -17,33 +17,66 @@
  * 	  пользуясь уже предоставленными интерфейсами (избавиться от всех any типов)
 */
 
-import { UserSettingOptions } from '../enums';
+import { Currency, UserSettingOptions } from '../enums';
+import { BankOffice, IBankUser } from '../task_2';
 
 export class UserSettingsModule {
-	private _bankOffice: any;
-	private _user: any;
+	private _bankOffice: BankOffice;
+	private _user: IBankUser;
 
-	public set user(user: any) {
+	public set user(user: IBankUser) {
 		this._user = user;
 	}
 
-	constructor(initialBankOffice: any) {
+	constructor(initialBankOffice: BankOffice) {
 		this._bankOffice = initialBankOffice;
 	}
 
-	private changeUserName(newName: any): any {
-
+	private changeUserName(newName: string): boolean {
+		if (newName.length > 0 && newName.length <= 50
+			&& newName.match(/[А-Яа-я]{1,50}/g) !== null) {
+			this._user.name = newName[0].toUpperCase + newName.toLowerCase().slice(1);
+			return true;
+		}
+		return false;
 	}
 
-	private changeUserSurname(newSurname: any): any {
-
+	private changeUserSurname(newSurname: string): boolean {
+		if (newSurname.length > 0 && newSurname.length <= 50
+			&& newSurname.match(/[А-Яа-я]{1,50}/g) !== null) {
+			this._user.surname = newSurname[0].toUpperCase() + newSurname.toLowerCase().slice(1);
+			return true;
+		}
+		return false;
 	}
 
-	private registerForUserNewCard(newCardId: any): any {
-
+	private registerForUserNewCard(newCardId: string): boolean {
+		if (newCardId && this._bankOffice.getCardById(newCardId) === null
+			&& !this._bankOffice.isCardTiedToUser(newCardId)) {
+			this._user.cards.push({
+				id: newCardId,
+				balance: 0,
+				currency: Currency.RUB,
+				pin: "",
+			});
+			return true;
+		}
+		return false;
 	}
 
-	public changeUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
+	public changeUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
+		switch (Number(option)) {
+			case UserSettingOptions.name:
+				return this.changeUserName(argsForChangeFunction);
 
+			case UserSettingOptions.surname:
+				return this.changeUserSurname(argsForChangeFunction);
+
+			case UserSettingOptions.newCard:
+				return this.registerForUserNewCard(argsForChangeFunction);
+
+			default:
+				return false;
+		}
 	}
 }
