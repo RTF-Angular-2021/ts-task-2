@@ -20,7 +20,7 @@
 
 import { Currency } from '../enums';
 
-interface IMoneyInfo {
+interface IMoneyInfo { 
 	denomination: string;
 	currency: Currency;
 }
@@ -31,16 +31,50 @@ export interface IMoneyUnit {
 }
 
 export class MoneyRepository {
-	private _repository: any;
-	constructor(initialRepository: any) {
+	private _repository: IMoneyUnit[];
+	private static readonly _usNominal: number[] = [100, 50, 20, 10, 5, 2, 1];
+	private static readonly _ruNominal: number[] = [5000, 2000, 1000, 500, 200, 100, 50];
+	constructor(initialRepository: IMoneyUnit[]) {
 		this._repository = initialRepository;
 	}
 
-	public giveOutMoney(count: any, currency: any): any {
-
+	private static _splitAmount(value: number, currency: Currency): [string, number][] {
+		let result: [string, number][] = [];
+		const denominations: number[] = currency === Currency.RUB ? this._ruNominal : this._usNominal;
+		denominations.forEach(nominal => {
+			if (nominal < value){
+				const count: number = Math.floor(value / nominal);
+				result.push([`${nominal}${Currency[currency]}`, count]);
+				value -= nominal * count; 
+			}
+		})
+		return result;
 	}
 
-	public takeMoney(moneyUnits: any): any {
+	public giveOutMoney(count: number, currency: Currency): boolean {
+		const nominalCountPair = MoneyRepository._splitAmount(count, currency);
+		nominalCountPair.forEach(pair => {
+			if (!this._repository.find(unit => unit.moneyInfo.denomination === pair[0] && unit.count >= pair[1])) {
+				return false;
+			}
+		})
+		return true;
+	}
 
+	public takeMoney(moneyUnits: IMoneyUnit[]) {
+		moneyUnits.forEach(unit1 => {
+			let flag: boolean = true;
+			for(const unit2 of this._repository){
+				const isEqualNominal = unit1.moneyInfo.denomination === unit2.moneyInfo.denomination;
+				const isEqualCurrency = unit1.moneyInfo.currency === unit2.moneyInfo.currency;
+				if (isEqualNominal && isEqualCurrency) {
+					unit2.count += unit1.count;
+					flag = false;
+				}
+			}
+			if (flag) {
+				this._repository.push(unit1);
+			}
+		})
 	}
 }

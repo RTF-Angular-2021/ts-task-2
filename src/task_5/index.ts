@@ -16,8 +16,8 @@
 */
 
 import { Currency, UserSettingOptions } from '../enums';
-import { MoneyRepository } from '../task_1';
-import { BankOffice, IBankUser } from '../task_2';
+import { IMoneyUnit, MoneyRepository } from '../task_1';
+import { BankOffice, IBankUser, ICard } from '../task_2';
 import { UserSettingsModule } from '../task_3';
 import { CurrencyConverterModule } from '../task_4';
 
@@ -27,31 +27,65 @@ class BankTerminal {
 	private _userSettingsModule: UserSettingsModule;
 	private _currencyConverterModule: CurrencyConverterModule;
 	private _authorizedUser: IBankUser;
+	private _usersCard: ICard;
 
-	constructor(initBankOffice: any, initMoneyRepository: any) {
+	constructor(initBankOffice: BankOffice, initMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initMoneyRepository;
 		this._bankOffice = initBankOffice;
 		this._userSettingsModule = new UserSettingsModule(initBankOffice);
 		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
 	}
 
-	public authorizeUser(user: any, card: any, cardPin: any): any {
-
+	public authorizeUser(user: IBankUser, card: ICard, cardPin: string): boolean {
+		if (this._bankOffice.authorize(user.id, card.id, cardPin)) {
+			this._authorizedUser = user;
+			this._usersCard = card;
+			return true;
+		}
+		return false;
 	}
 
-	public takeUsersMoney(moneyUnits: any): any {
-
+	public takeUsersMoney(moneyUnits: IMoneyUnit[]): boolean {
+		if (this._authorizedUser) {
+			this._moneyRepository.takeMoney(moneyUnits);
+			const amount = moneyUnits.reduce((sum, unit) => {
+				return sum + unit.count * (+unit.moneyInfo.denomination.match(/\d/g).join(''));
+			}, 0);
+			this._usersCard.balance += amount;
+			return true;
+		}
+		return false
 	}
 
-	public giveOutUsersMoney(count: any): any {
-
+	public giveOutUsersMoney(count: number): boolean {
+		if (this._authorizedUser && this._usersCard.balance >= count) {
+			if (this._moneyRepository.giveOutMoney(count, this._usersCard.currency)) {
+				this._usersCard.balance -= count;
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
-
+	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
+		if (this._authorizedUser) {
+			if (this._userSettingsModule.changeUserSettings(option, argsForChangeFunction)) {
+				return true;
+			}
+			this._userSettingsModule.user = this._authorizedUser;
+			return this._userSettingsModule.changeUserSettings(option, argsForChangeFunction);
+		}
+		return false;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit[]): boolean {
+		const amount = moneyUnits.reduce((sum, unit) => {
+			return sum + unit.count * (+unit.moneyInfo.denomination.match(/\d/g).join(''));
+		}, 0);
+		if (this.giveOutUsersMoney(amount)){
+			const convertUnits = this._currencyConverterModule.convertMoneyUnits(fromCurrency, toCurrency, moneyUnits);
+			return this.takeUsersMoney(convertUnits);
+		}
+		return false;
 	}
 }
