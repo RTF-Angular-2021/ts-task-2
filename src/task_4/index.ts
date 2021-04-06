@@ -27,9 +27,9 @@ export class CurrencyConverterModule {
 
 	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit): string[] {
 		if (fromCurrency === Currency['RUB'] && toCurrency === Currency['USD'] && moneyUnits.count % 70 === 0) {
-			this._moneyRepository.push(`${moneyUnits.count / 70}${toCurrency}`);
+			this._moneyRepository.push(`${moneyUnits.count / 70}${Currency[1]}`);
 		} else if (fromCurrency === Currency['USD'] && toCurrency === Currency['RUB']) {
-			this._moneyRepository.push(`${moneyUnits.count * 70}${toCurrency}`);
+			this._moneyRepository.push(`${moneyUnits.count * 70}${Currency[0]}`);
 		}
 		return this._moneyRepository;
 	}
