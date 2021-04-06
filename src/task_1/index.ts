@@ -38,10 +38,14 @@ export class MoneyRepository {
 
 	public giveOutMoney(count: number, currency: Currency): boolean {
 		let copyCount = count;
+		const denominationRU = [10, 50, 100, 500, 1000, 5000];
+		const denominationUS = [1, 2, 5, 10, 20, 50, 100];
 		this._repository.forEach(item => {
 			for (let key in item) {
 				//сравниваю по индексу валюты currency - 0 (RUB) или 1 (USD)
-                if (item['moneyInfo']['currency'] === currency  && copyCount >= item['count']) {
+                if (item['moneyInfo']['currency'] === currency 
+				&& copyCount >= item['count'] 
+				&& (denominationRU.includes(item['count']) || denominationUS.includes(item['count']))) {
                     copyCount -= item['count'];
                     item['count'] = 0;
                 } 
@@ -55,3 +59,5 @@ export class MoneyRepository {
 		this._repository.push(moneyUnits);
 	}
 }
+
+
