@@ -16,8 +16,8 @@
 */
 
 import { Currency, UserSettingOptions } from '../enums';
-import { MoneyRepository } from '../task_1';
-import { BankOffice, IBankUser } from '../task_2';
+import { IMoneyUnit, MoneyRepository } from '../task_1';
+import { BankOffice, IBankUser, ICard } from '../task_2';
 import { UserSettingsModule } from '../task_3';
 import { CurrencyConverterModule } from '../task_4';
 
@@ -27,31 +27,84 @@ class BankTerminal {
 	private _userSettingsModule: UserSettingsModule;
 	private _currencyConverterModule: CurrencyConverterModule;
 	private _authorizedUser: IBankUser;
+	private _authorizedCard: ICard;
+	private _isUserAuthorized: boolean;
 
-	constructor(initBankOffice: any, initMoneyRepository: any) {
+	constructor(
+		initBankOffice: BankOffice,
+		initMoneyRepository: MoneyRepository
+	) {
 		this._moneyRepository = initMoneyRepository;
 		this._bankOffice = initBankOffice;
 		this._userSettingsModule = new UserSettingsModule(initBankOffice);
-		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
+		this._currencyConverterModule = new CurrencyConverterModule(
+			initMoneyRepository
+		);
+		this._isUserAuthorized = false;
 	}
 
-	public authorizeUser(user: any): any {
+	public authorizeUser(user: IBankUser, card: ICard, cardPin: string): void {
+		if (this._bankOffice.authorize(user.id, card.id, cardPin)){
+			this._authorizedUser = user;
+			this._userSettingsModule.user = user;
+			this._authorizedCard = card;
+			this._isUserAuthorized = true;
+			return
+		}
 
+		throw new Error('Ошибка авторизации');
 	}
 
-	public takeUsersMoney(moneyUnits: any): any {
-
+	public takeUsersMoney(moneyUnits: Array<IMoneyUnit>): void {
+		if (!this._isUserAuthorized)
+			throw Error('Пользователь не авторизован');
+		
+		let moneyTaken = this._moneyRepository.takeMoney(moneyUnits);
+		this._authorizedCard.balance += moneyTaken;
 	}
 
-	public giveOutUsersMoney(count: any): any {
-
+	public giveOutUsersMoney(count: number): void {
+		if (!this._isUserAuthorized)
+			throw Error('Пользователь не авторизован');
+		
+		if (this._authorizedCard.balance < count)
+			throw Error('Недостаточно средств');
+		
+		this._moneyRepository.giveOutMoney(
+			count,
+			this._authorizedCard.currency
+		);
+		this._authorizedCard.balance -= count;
 	}
 
-	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
+	public changeAuthorizedUserSettings(
+		option: UserSettingOptions, 
+		argsForChangeFunction: string
+	): void {
+		if (!this._isUserAuthorized)
+			throw Error('Пользователь не авторизован');
 
+		let isSettingsChanged = this._userSettingsModule.changeUserSettings(
+			option, 
+			argsForChangeFunction
+		);
+
+		if (!isSettingsChanged)
+			throw Error('Ошибка изменения настроек пользователя');
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
+	public convertMoneyUnits(
+		fromCurrency: Currency, 
+		toCurrency: Currency, 
+		moneyUnits: Array<IMoneyUnit>
+	): Array<IMoneyUnit> {
+		if (!this._isUserAuthorized)
+			throw Error('Пользователь не авторизован');
+		
+		return this._currencyConverterModule.convertMoneyUnits(
+			fromCurrency,
+			toCurrency,
+			moneyUnits
+		);
 	}
 }
