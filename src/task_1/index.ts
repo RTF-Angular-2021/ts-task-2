@@ -31,16 +31,16 @@ export interface IMoneyUnit {
 }
 
 export class MoneyRepository {
-	private _repository: any;
-	constructor(initialRepository: any) {
+	private _repository: Array<IMoneyUnit>;
+	constructor(initialRepository: Array<IMoneyUnit>) {
 		this._repository = initialRepository;
 	}
 
-	public giveOutMoney(count: any, currency: any): any {
-
+	public giveOutMoney(count: number, currency: Currency): boolean {
+		return true;
 	}
 
-	public takeMoney(moneyUnits: any): any {
-
+	public takeMoney(moneyUnits: Array<IMoneyUnit>) {
+		this._repository = this._repository.concat(moneyUnits);
 	}
 }
