@@ -18,13 +18,19 @@
 import { Currency } from '../enums';
 
 export class CurrencyConverterModule {
-	private _moneyRepository: any;
+	private _moneyRepository: MoneyRepository;
 
-	constructor(initialMoneyRepository: any) {
+	constructor(initialMoneyRepository:  MoneyRepository) {
 		this._moneyRepository = initialMoneyRepository;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): Array<IMoneyUnit> {
+		if(fromCurrency === toCurrency) return moneyUnits;
+		let amount: number = 0;
+		moneyUnits.forEach(x => amount += x.count * Number(x.moneyInfo.denomination));
+		let fromRub = fromCurrency === Currency.RUB;
+		let money = fromRub ? (amount - amount % 70) / 70 : Math.floor(amount) * 70;
+		return this._moneyRepository.convertMoney(money, fromRub ? Currency.USD : Currency.RUB, moneyUnits);
 
 	}
 }

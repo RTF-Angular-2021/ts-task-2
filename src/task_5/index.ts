@@ -28,30 +28,47 @@ class BankTerminal {
 	private _currencyConverterModule: CurrencyConverterModule;
 	private _authorizedUser: IBankUser;
 
-	constructor(initBankOffice: any, initMoneyRepository: any) {
+	constructor(initBankOffice: BankOffice, initMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initMoneyRepository;
 		this._bankOffice = initBankOffice;
 		this._userSettingsModule = new UserSettingsModule(initBankOffice);
 		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
 	}
 
-	public authorizeUser(user: any): any {
-
+	public authorizeUser(user: IBankUser, card: ICard, cardPin: string): boolean {
+		if(!this._bankOffice.authorize(user.id, card.id, cardPin)) return false;
+		{
+		this._authorizedUser = user;
+			this._usersCard = card;
+			return true;
+		}
+		return false;
 	}
 
-	public takeUsersMoney(moneyUnits: any): any {
-
+	public takeUsersMoney(moneyUnits: IMoneyUnit[]): boolean {
+		if(!this._authorizedUser || this._authorizedUser.cards.length === 0) return false;
+		this._moneyRepository.takeMoney(moneyUnits);
+		moneyUnits.forEach(unit => this._authorizedUser.cards[0].balance += unit.count * Number(unit.moneyInfo.denomination));
+		return true;
 	}
 
-	public giveOutUsersMoney(count: any): any {
 
+	public giveOutUsersMoney(count: number): boolean {
+		if (typeof this._authorizedUser !== "undefined" && count > 0) {
+			let userCard = this._authorizedUser.cards[0];
+			if (this._moneyRepository.giveOutMoney(count, userCard.currency)) {
+				return this._bankOffice.removeMoneyFromCartById(userCard.id, count);
+			}
+			return false;
+		}
+		return false;
 	}
 
-	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
-
+	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
+		return this._userSettingsModule.changeUserSettings(option, argsForChangeFunction);
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): Array<IMoneyUnit> {
+		return this._currencyConverterModule.convertMoneyUnits(fromCurrency, toCurrency, moneyUnits);
 	}
 }

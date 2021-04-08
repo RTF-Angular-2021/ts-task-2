@@ -1,3 +1,4 @@
+import { ICard } from './index';
 /** Задача 1 - BankOffice
  * Имеется класс BankOffice. Который должен хранить пользователей и банковские карты.
  * Пользователи банка могу иметь карту, а могут не иметь.
@@ -17,7 +18,7 @@
 
 import { Currency } from '../enums';
 
-interface ICard {
+export interface ICard {
 	id: string;
 	balance: number;
 	currency: Currency,
@@ -28,27 +29,48 @@ export interface IBankUser {
 	id: string;
 	name: string;
 	surname: string;
-	cards: Array<ICard>;
+	cards?: Array<ICard>;
 }
 
 export class BankOffice {
-	private _users: any;
-	private _cards: any;
+	private _users: IBankUser;
+	private _cards: ICard;
 
-	constructor(users: any, cards: any) {
+	constructor(users: IBankUser, cards: ICard) {
 		this._users = users;
 		this._cards = cards;
 	}
 
-	public authorize(userId: any, cardId: any, cardPin: any): any {
+	public authorize(userId: string, cardId: string, cardPin: string): boolean {
+		for (let users of this._users) {
+			if (users.id === userId) {
+				if (users.cards.find(card => card.id === cardId && card.pin === cardPin)){
+					return true;
+					}
+				}
+			}
+			return false;
+		}
+	}
+
+	public getCardById(cardId: string): ICards {
+		for (let card of this._cards) {
+			if (card.id === cardId) {
+				return card;
+			}
+		}
+		return null;
 
 	}
 
-	public getCardById(cardId: any): any {
+	public isCardTiedToUser(cardId: string): boolean {
+		for (let user of this._users) {
+			for (let userCard of user.cards) {
+				if (userCard.id === cardId) {
+					return true;
+				}
+			}
+		}
+		return false;
 
 	}
-
-	public isCardTiedToUser(cardId: any): any {
-
-	}
-}
