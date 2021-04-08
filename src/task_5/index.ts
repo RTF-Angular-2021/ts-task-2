@@ -16,8 +16,8 @@
 */
 
 import { Currency, UserSettingOptions } from '../enums';
-import { MoneyRepository } from '../task_1';
-import { BankOffice, IBankUser } from '../task_2';
+import { MoneyRepository, IMoneyUnit } from '../task_1';
+import { BankOffice, IBankUser, ICard } from '../task_2';
 import { UserSettingsModule } from '../task_3';
 import { CurrencyConverterModule } from '../task_4';
 
@@ -26,32 +26,53 @@ class BankTerminal {
 	private _moneyRepository: MoneyRepository;
 	private _userSettingsModule: UserSettingsModule;
 	private _currencyConverterModule: CurrencyConverterModule;
-	private _authorizedUser: IBankUser;
+	private _authorizedUser: IBankUser | undefined;
 
-	constructor(initBankOffice: any, initMoneyRepository: any) {
+	constructor(initBankOffice: BankOffice, initMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initMoneyRepository;
 		this._bankOffice = initBankOffice;
 		this._userSettingsModule = new UserSettingsModule(initBankOffice);
 		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
 	}
 
-	public authorizeUser(user: any): any {
-
+	public authorizeUser(user: IBankUser, card: ICard, cardPin: string): boolean {
+		if(!this._bankOffice.authorize(user.id, card.id, cardPin)) return false;
+		this._authorizedUser = {
+			id: user.id,
+			name: user.name,
+			surname: user.surname,
+			cards: [card]
+		}
+		return true;
 	}
 
-	public takeUsersMoney(moneyUnits: any): any {
-
+	public takeUsersMoney(moneyUnits: Array<IMoneyUnit>): boolean {
+		if(!this._authorizedUser || this._authorizedUser.cards.length === 0) return false;
+		this._moneyRepository.takeMoney(moneyUnits);
+		moneyUnits.forEach(unit => this._authorizedUser.cards[0].balance += unit.count * Number(unit.moneyInfo.denomination));
+		return true;
 	}
 
-	public giveOutUsersMoney(count: any): any {
-
+	public giveOutUsersMoney(count: number): boolean {
+		if(	!this._authorizedUser || this._authorizedUser.cards.length === 0 
+			|| this._authorizedUser.cards[0].balance < count
+			|| !this._moneyRepository.giveOutMoney(count, this._authorizedUser.cards[0].currency)) return false;
+		this._authorizedUser.cards[0].balance -= count;
+		return true;
 	}
 
-	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
-
+	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
+		return this._authorizedUser ? this._userSettingsModule.changeUserSettings(option, argsForChangeFunction) : false;	
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): Array<IMoneyUnit> {
+		if(!this._authorizedUser) return []
+		let convertMoney = this._currencyConverterModule.convertMoneyUnits(fromCurrency, toCurrency, moneyUnits);
+		if(convertMoney.length === 0) return [];
+		this._moneyRepository.updateRepository(convertMoney, convertMoney[0].moneyInfo.currency);
+		moneyUnits.forEach(unit => {
+			this._authorizedUser.cards[0].balance -= unit.count * Number(unit.moneyInfo.denomination);
+		})
+		return convertMoney;
 	}
 }

@@ -17,7 +17,7 @@
 
 import { Currency } from '../enums';
 
-interface ICard {
+export interface ICard {
 	id: string;
 	balance: number;
 	currency: Currency,
@@ -32,23 +32,27 @@ export interface IBankUser {
 }
 
 export class BankOffice {
-	private _users: any;
-	private _cards: any;
+	private _users: Array<IBankUser>;
+	private _cards: Array<ICard>;
 
-	constructor(users: any, cards: any) {
+	constructor(users: Array<IBankUser>, cards: Array<ICard>) {
 		this._users = users;
 		this._cards = cards;
 	}
 
-	public authorize(userId: any, cardId: any, cardPin: any): any {
-
+	public authorize(userId: string, cardId: string, cardPin: string): boolean {
+		let user = this._users.find(x => x.id === userId);
+		if(!user) return false;
+		let card = user.cards.find(x=> x.id === cardId);
+		if(!card) return false;
+		return card.pin === cardPin;
 	}
 
-	public getCardById(cardId: any): any {
-
+	public getCardById(cardId: string): ICard | undefined {
+		return this._cards.find(x=> x.id === cardId);
 	}
 
-	public isCardTiedToUser(cardId: any): any {
-
+	public isCardTiedToUser(cardId: string): boolean {
+		return this._users.filter(x=> x.cards.find(y=> y.id === cardId)).length > 0;
 	}
 }
