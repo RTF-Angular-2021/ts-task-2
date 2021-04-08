@@ -1,46 +1,52 @@
-/** Задача 1 - MoneyRepository
- * Имеется класс денежного хранилища - MoneyRepository.
- * Который должен хранить денежные единицы
- * разных валют, разного номинала и в разном количестве.
- * Требуется:
- * 1) Реализовать классу MoneyRepository 2 метода:
- * 		1.1) giveOutMoney - позволяет достать денежные единицы из хранилища по принципу жадного алгоритма:
- * 			 сумма 1350RUB будет выдана
- * 			 одной купюрой номиналом 1000RUB,
- * 			 одной купюрой номиналом 200RUB,
- * 			 одной купюрой номиналом 100RUB,
- * 			 одной купюрой номиналом 50RUB
- * 			 с учетом, что все эти купюры будут находится в хранилище.
- * 			 Принимает аргументы count - сумма, требуемая к выдаче, currency - валюта
- * 			 Если сумма была собрана и выдана, то метод возвращает true, иначе false
- * 		1.2) takeMoney - позволяет положить в хранилище денежные единицы разных номиналов и разного количества
- * 2) Типизировать все свойства и методы класса MoneyRepository,
- * 	  пользуясь уже предоставленными интерфейсами (избавиться от всех any типов)
-*/
-
 import { Currency } from '../enums';
-
 interface IMoneyInfo {
 	denomination: string;
 	currency: Currency;
 }
-
 export interface IMoneyUnit {
 	moneyInfo: IMoneyInfo;
 	count: number;
 }
 
 export class MoneyRepository {
-	private _repository: any;
-	constructor(initialRepository: any) {
+	private _repository: Array<object>;
+	constructor(initialRepository: Array<object>) {
 		this._repository = initialRepository;
 	}
 
-	public giveOutMoney(count: any, currency: any): any {
-
+	private order(a: IMoneyUnit, b: IMoneyUnit): number{
+		return a.moneyInfo.denomination.length > b.moneyInfo.denomination.length ? -1 :
+		a.moneyInfo.denomination.length < b.moneyInfo.denomination.length ? 1 :
+		a.moneyInfo.denomination > b.moneyInfo.denomination ? -1 : 1;
 	}
 
-	public takeMoney(moneyUnits: any): any {
+	public giveOutMoney(count: number, currency: Currency): boolean {
+		let temp = count;
+		const dollars = [1, 2, 5, 10, 20, 50, 100];
+		const rubles = [10, 50, 100, 500, 1000, 5000];
+		this._repository.forEach(e => {
+			for (let key in e)
+                if (e['moneyInfo']['currency'] === currency && temp >= e['count'] 
+				&& (rubles.includes(e['count']) || dollars.includes(e['count']))) {
+                    temp -= e['count'];
+                    e['count'] = 0;
+                } 
+		});
+		return temp === 0;
+	}
 
+	public takeMoney(moneyUnits: Array<IMoneyUnit>): number {
+		moneyUnits.sort(this.order);
+		let res = 0;
+		for (let e of moneyUnits){
+			const currency = e.moneyInfo.currency.toString();
+			for (let moneyUnitInRepo of this._repository[currency])
+				if (e.moneyInfo.denomination === moneyUnitInRepo.moneyInfo.denomination) {
+					moneyUnitInRepo.count += e.count;
+					res += e.count;
+					break;
+				}
+		}
+		return res;
 	}
 }
