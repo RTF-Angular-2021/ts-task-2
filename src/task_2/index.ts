@@ -17,7 +17,7 @@
 
 import { Currency } from '../enums';
 
-interface ICard {
+export interface ICard {
 	id: string;
 	balance: number;
 	currency: Currency,
@@ -32,23 +32,66 @@ export interface IBankUser {
 }
 
 export class BankOffice {
-	private _users: any;
-	private _cards: any;
+	private _users: Array<IBankUser>;
+	private _cards: Array<ICard>;
 
-	constructor(users: any, cards: any) {
+	constructor(users: Array<IBankUser>, cards: Array<ICard>) {
 		this._users = users;
 		this._cards = cards;
 	}
 
-	public authorize(userId: any, cardId: any, cardPin: any): any {
+	public authorize(userId: string, cardId: string, cardPin: string): boolean {
+		let user: IBankUser = this._users.find(user => user.id === userId);
 
+		return (user.cards.find(card => card.id === cardId).pin === cardPin);
 	}
 
-	public getCardById(cardId: any): any {
-
+	public getCardById(cardId: string): ICard {
+		return (this._cards.find(element => element.id === cardId));
 	}
 
-	public isCardTiedToUser(cardId: any): any {
-
+	public isCardTiedToUser(cardId: string): boolean {
+		if (this._users.find(user => user.cards.find(card => card.id === cardId))) {
+			return true;
+		}
+		return false;
 	}
 }
+
+let cards1: Array<ICard> = [
+	{
+		id: '1',
+		balance: 1,
+		currency: 1,
+		pin: '1',
+	},
+	{
+		id: '2',
+		balance: 2,
+		currency: 2,
+		pin: '2',
+	}
+]
+let cards2: Array<ICard> = [
+	{
+		id: '10',
+		balance: 10,
+		currency: 10,
+		pin: '10',
+	},
+]
+
+let users: Array<IBankUser> = [
+	{
+		id: 'user1',
+		name: 'name1',
+		surname: 'surname1',
+		cards: cards1,
+	},
+	{
+		id: 'user2',
+		name: 'name2',
+		surname: 'surname2',
+		cards: cards2,
+	},
+]
