@@ -16,6 +16,7 @@
 */
 
 import { Currency } from '../enums';
+import {IMoneyUnit, MoneyRepository} from "../task_1";
 
 export class CurrencyConverterModule {
 	private _moneyRepository: any;
@@ -24,7 +25,21 @@ export class CurrencyConverterModule {
 		this._moneyRepository = initialMoneyRepository;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): any {
+		for(let unit of moneyUnits)
+		{
+			let denomination = parseInt(unit.moneyInfo.denomination)
+			switch (fromCurrency + toCurrency) {
+				case Currency.RUB + Currency.USD:
+					 this._moneyRepository.giveOutMoney(unit.count * denomination / 70, toCurrency) ? unit.count * denomination / 70 : 0;
+				case Currency.USD + Currency.RUB:
+					 this._moneyRepository.giveOutMoney(unit.count * denomination * 70, toCurrency) ? unit.count * denomination * 70 : 0;
+				case Currency.RUB + Currency.RUB:
+					 this._moneyRepository.giveOutMoney(unit.count * denomination, toCurrency) ? unit.count * denomination : 0;
+				case Currency.USD + Currency.USD:
+					 this._moneyRepository.giveOutMoney(unit.count * denomination, toCurrency) ? unit.count * denomination : 0;
+		}
+		return this._moneyRepository;
+	}
 	}
 }

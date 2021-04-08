@@ -31,16 +31,47 @@ export interface IMoneyUnit {
 }
 
 export class MoneyRepository {
-	private _repository: any;
-	constructor(initialRepository: any) {
-		this._repository = initialRepository;
+	private _repository: Array<IMoneyUnit>;
+	constructor(initialRepository: IMoneyUnit|IMoneyUnit[]) {
+		if(this.instanceOfMoneyUnit(initialRepository))
+			this._repository.push(<IMoneyUnit>initialRepository)
+		else{
+			for(let item in <IMoneyUnit[]>initialRepository){
+				if(this.instanceOfMoneyUnit(item))
+					this._repository.push(<IMoneyUnit><unknown>item)
+			}
+		}
+	};
+
+	private instanceOfMoneyUnit(item: any):boolean {
+		return 'moneyInfo' in item && 'count' in item;
+	};
+
+	private getMoneyUnit(currency: Currency): IMoneyUnit{
+		return this._repository.filter(x => x.moneyInfo.currency === currency).pop()
 	}
 
-	public giveOutMoney(count: any, currency: any): any {
-
+	public giveOutMoney(count: number, currency: Currency): boolean {
+		if(count < 0)
+			return false;
+			//throw new Error("Value cannot be negative")
+		let thousandRadix = Math.floor(count / 1000);
+		let hundredRadix = Math.floor(count %1000/100);
+		let demihundredRadix = Math.floor(count %1000 % 100 / 50);
+		if(count - (thousandRadix*1000 + hundredRadix*100 + demihundredRadix*50) !== 0)
+			return false;
+			//throw new Error("Value must be divisible by 50")
+		this.getMoneyUnit(currency).count -= thousandRadix*1000 + hundredRadix*100 + demihundredRadix*50;
+		return true
 	}
 
-	public takeMoney(moneyUnits: any): any {
-
+	public takeMoney(moneyUnits: IMoneyUnit[]): boolean {
+		for(let unit of moneyUnits){
+			if(unit.count < 0)
+				continue;
+				//throw new Error("Value cannot be negative)
+			this.getMoneyUnit(unit.moneyInfo.currency).count += unit.count;
+		}
+		return true;
 	}
 }
