@@ -41,8 +41,8 @@ export class UserSettingsModule {
 	}
 
 	private registerForUserNewCard(newCardId: string): boolean {
-		if (!this._bankOffice.isCardTiedToUser(newCardId) && this._user.cards) {
-			this._user.cards[0]['id'] = newCardId;
+		if (!this._bankOffice.isCardTiedToUser(newCardId) && this._bankOffice.getCardById(newCardId)) {
+			this._user.cards[0] = this._bankOffice.getCardById(newCardId);
 			return true;
 		}
 		return false;
