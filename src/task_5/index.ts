@@ -27,8 +27,9 @@ class BankTerminal {
 	private _userSettingsModule: UserSettingsModule;
 	private _currencyConverterModule: CurrencyConverterModule;
 	private _authorizedUser: IBankUser;
+	private _currentUserCard: ICard;
 
-	constructor(initBankOffice: BankOffice, initMoneyRepository: any) {
+	constructor(initBankOffice: BankOffice, initMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initMoneyRepository;
 		this._bankOffice = initBankOffice;
 		this._userSettingsModule = new UserSettingsModule(initBankOffice);
@@ -41,20 +42,31 @@ class BankTerminal {
 		}
 	}
 
-	public takeUsersMoney(moneyUnits: IMoneyUnit): void {
+	public takeUsersMoney(moneyUnits: IMoneyUnit[]): void {
 		if (Object.keys(this._authorizedUser).length > 0) {
 			this._moneyRepository.takeMoney(moneyUnits);
+			//todo пополнить баланс
+			let balance = 0;
+			for (let money of moneyUnits) {
+				if (this._currentUserCard.currency === money.moneyInfo.currency) {
+					balance = parseInt(money.moneyInfo.denomination) * money.count
+				} else {
+					balance = this._currencyConverterModule.convertMoneyUnits(this._currentUserCard.currency, money.moneyInfo.currency, money);
+				}
+			}
+			this._currentUserCard.balance += balance;
 		}
 	}
 
 	public giveOutUsersMoney(count: number): void {
 		if (Object.keys(this._authorizedUser).length > 0) {
-			this._moneyRepository.giveOutMoney(count, this._authorizedUser.cards[0]['currency']);
+			this._moneyRepository.giveOutMoney(count, this._authorizedUser.cards[0].currency);
 		}
 	}
 
 	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: string): void{
 		if (Object.keys(this._authorizedUser).length > 0) {
+			this._userSettingsModule.user = this._authorizedUser;
 			this._userSettingsModule.changeUserSettings(option, argsForChangeFunction);
 		}
 	}

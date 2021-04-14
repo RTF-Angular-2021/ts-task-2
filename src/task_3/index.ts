@@ -42,19 +42,19 @@ export class UserSettingsModule {
 
 	private registerForUserNewCard(newCardId: string): boolean {
 		if (!this._bankOffice.isCardTiedToUser(newCardId) && this._bankOffice.getCardById(newCardId)) {
-			this._user.cards[0] = this._bankOffice.getCardById(newCardId);
+			this._user.cards.push(this._bankOffice.getCardById(newCardId));
 			return true;
 		}
 		return false;
 	}
 
 	public changeUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
-		if (argsForChangeFunction === option[0]) {
+		if (option === UserSettingOptions.name) {
 			return this.changeUserName(argsForChangeFunction);
-		} else if (argsForChangeFunction === option[1]) {
+		} else if (option === UserSettingOptions.surname) {
 			return this.changeUserSurname(argsForChangeFunction);
-		} else if (argsForChangeFunction === option[2]) {
+		} else if (option === UserSettingOptions.newCard) {
 			return this.registerForUserNewCard(argsForChangeFunction);
-		}
+		} else return false;
 	}
 }

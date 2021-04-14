@@ -31,33 +31,35 @@ export interface IMoneyUnit {
 }
 
 export class MoneyRepository {
-	private _repository: Array<object>;
-	constructor(initialRepository: Array<object>) {
+	private _repository: IMoneyUnit[];
+	constructor(initialRepository: IMoneyUnit[]) {
 		this._repository = initialRepository;
 	}
 
 	public giveOutMoney(count: number, currency: Currency): boolean {
 		let copyCount = count;
-		const denominationRU = [10, 50, 100, 500, 1000, 5000];
-		const denominationUS = [1, 2, 5, 10, 20, 50, 100];
-		this._repository.forEach(item => {
+		let currentArray = this._repository.filter(u => u.moneyInfo.currency === currency);
+		currentArray.sort((prev, next) => parseInt(next.moneyInfo.denomination) - parseInt(prev.moneyInfo.denomination));
+		currentArray.forEach(item => {
 			for (let key in item) {
-				//сравниваю по индексу валюты currency - 0 (RUB) или 1 (USD)
-                if (item['moneyInfo']['currency'] === currency 
-				&& copyCount >= item['count'] 
-				&& (denominationRU.includes(item['count']) || denominationUS.includes(item['count']))) {
-                    copyCount -= item['count'];
-                    item['count'] = 0;
-                } 
-            }
+				if (copyCount > 0) {
+					let maxCount = Math.floor(copyCount / parseInt(item.moneyInfo.denomination));
+					if (maxCount > item.count) {
+                        maxCount = item.count;
+                    	item.count -= maxCount;
+                    }
+                    copyCount -= maxCount * parseInt(item.moneyInfo.denomination);
+				}
+			}
 		});
-		
+
 		return copyCount === 0 ? true : false;
 	}
 
-	public takeMoney(moneyUnits: IMoneyUnit): void {
-		this._repository.push(moneyUnits);
+	public takeMoney(moneyUnits: IMoneyUnit[]): void {
+		for (let item of moneyUnits) {
+			this._repository.push(item);
+		}
 	}
 }
-
 

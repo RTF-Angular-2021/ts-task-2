@@ -16,21 +16,24 @@
 */
 
 import { Currency } from '../enums';
-import { IMoneyUnit } from '../task_1';
+import { IMoneyUnit, MoneyRepository } from '../task_1';
 
 export class CurrencyConverterModule {
-	private _moneyRepository: string[];
+	private _moneyRepository: MoneyRepository;
 
-	constructor(initialMoneyRepository: string[]) {
+	constructor(initialMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initialMoneyRepository;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit): string[] {
-		if (fromCurrency === Currency['RUB'] && toCurrency === Currency['USD'] && moneyUnits.count % 70 === 0) {
-			this._moneyRepository.push(`${moneyUnits.count / 70}${Currency[1]}`);
-		} else if (fromCurrency === Currency['USD'] && toCurrency === Currency['RUB']) {
-			this._moneyRepository.push(`${moneyUnits.count * 70}${Currency[0]}`);
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit): number {
+		if (fromCurrency === Currency.RUB && toCurrency === Currency.USD && moneyUnits.count % 70 === 0) {
+			return this._moneyRepository.giveOutMoney(moneyUnits.count, toCurrency) 
+				? moneyUnits.count * parseInt(moneyUnits.moneyInfo.denomination) / 70 
+				: 0;
+		} else if (fromCurrency === Currency.USD && toCurrency === Currency.RUB) {
+			return this._moneyRepository.giveOutMoney(moneyUnits.count, toCurrency) 
+				? moneyUnits.count * parseInt(moneyUnits.moneyInfo.denomination) * 70 
+				: 0;
 		}
-		return this._moneyRepository;
 	}
 }
