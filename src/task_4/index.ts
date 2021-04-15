@@ -27,8 +27,8 @@ export class CurrencyConverterModule {
 
 	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): Array<IMoneyUnit> {
 		if(fromCurrency === toCurrency) return moneyUnits;
-		let amount: number = 0;
-		moneyUnits.forEach(x => amount += x.count * Number(x.moneyInfo.denomination));
+		let amount:number = moneyUnits.reduce((b, c) => b.count * Number(b.moneyInfo.denomination) 
+			+ c.count * Number(c.moneyInfo.denomination));
 		let fromRub = fromCurrency === Currency.RUB;
 		let money = fromRub ? (amount - amount % 70) / 70 : Math.floor(amount) * 70;
 		return this._moneyRepository.convertMoney(money, fromRub ? Currency.USD : Currency.RUB, moneyUnits);

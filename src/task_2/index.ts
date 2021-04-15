@@ -41,9 +41,9 @@ export class BankOffice {
 	}
 
 	public authorize(userId: string, cardId: string, cardPin: string): boolean {
-		let user = this._users.find(x => x.id === userId);
+		const user = this._users.find(x => x.id === userId);
 		if(!user) return false;
-		let card = user.cards.find(x=> x.id === cardId);
+		const card = user.cards.find(x=> x.id === cardId);
 		if(!card) return false;
 		return card.pin === cardPin;
 	}
