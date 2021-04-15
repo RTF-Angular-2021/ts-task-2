@@ -34,18 +34,8 @@ class BankTerminal {
 		this._userSettingsModule = new UserSettingsModule(initBankOffice);
 		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
 	}
-
-	public authorizeUser(user: IBankUser, card: ICard, cardPin: string): boolean {
-		if(!this._bankOffice.authorize(user.id, card.id, cardPin)) return false;
-		this._authorizedUser = {
-			id: user.id,
-			name: user.name,
-			surname: user.surname,
-			cards: [card]
-		}
-		return true;
-	}
-
+/*
+*/
 	public takeUsersMoney(moneyUnits: Array<IMoneyUnit>): boolean {
 		if(!this._authorizedUser || this._authorizedUser.cards.length === 0) return false;
 		this._moneyRepository.takeMoney(moneyUnits);
