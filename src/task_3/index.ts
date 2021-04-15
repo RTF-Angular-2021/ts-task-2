@@ -1,4 +1,3 @@
-import { BankOffice, IBankUser } from './../task_2/index';
 /** Задача 3 - UserSettingsModule
  * Имеется класс UserSettingsModule. Который должен отвечать за
  * изменение настроек пользователя.
@@ -18,7 +17,7 @@ import { BankOffice, IBankUser } from './../task_2/index';
  * 	  пользуясь уже предоставленными интерфейсами (избавиться от всех any типов)
 */
 
-import { UserSettingOptions } from '../enums';
+import { IBankUser, BankOffice } from '../task_2';
 
 export class UserSettingsModule {
 	private _bankOffice: BankOffice;
@@ -32,37 +31,40 @@ export class UserSettingsModule {
 		this._bankOffice = initialBankOffice;
 	}
 
-	private changeUserName(newName: String): boolean {
-		if(!this._user) return false
-		this._user.name = newName;
-		return true;
+	private changeUserName(newName: string): boolean {
+		if (newName) {
+			this._user.name = newName;
+			return true;
+		} else{
+			return false;
+		}
 	}
 
 	private changeUserSurname(newSurname: string): boolean {
-		if(!this._user) return false
-		this._user.surname = newSurname;
-		return true;
-
+		if (newSurname) {
+			this._user.name = newSurname;
+			return true;
+		} else
+			return false;
 	}
 
 	private registerForUserNewCard(newCardId: string): boolean {
-		const newCard = this._bankOffice.getCardById(newCardId);
-		if (this._user && newCard && !this._bankOffice.isCardTiedToUser(newCardId)) {
-			this._user.cards.push(newCard);
+		let card = this._bankOffice.getCardById(newCardId);
+		if (card && !this._bankOffice.isCardTiedToUser(newCardId))
+		{
+			this._user.cards.push(card);
 			return true;
 		}
-		return false;
-
+		else
+			return false;
 	}
 
 	public changeUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
-		if (option === UserSettingOptions.name){
+		if (option === UserSettingOptions.name)
 			return this.changeUserName(argsForChangeFunction);
-		} else if (option === UserSettingOptions.surname){
+		else if (option === UserSettingOptions.surname)
 			return this.changeUserSurname(argsForChangeFunction);
-		} else {
+		else if (option === UserSettingOptions.newCard)
 			return this.registerForUserNewCard(argsForChangeFunction);
-		}
-
 	}
 }

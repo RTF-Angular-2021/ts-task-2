@@ -1,4 +1,3 @@
-import { ICard } from './index';
 /** Задача 1 - BankOffice
  * Имеется класс BankOffice. Который должен хранить пользователей и банковские карты.
  * Пользователи банка могу иметь карту, а могут не иметь.
@@ -29,48 +28,31 @@ export interface IBankUser {
 	id: string;
 	name: string;
 	surname: string;
-	cards?: Array<ICard>;
+	cards: Array<ICard>;
 }
 
 export class BankOffice {
-	private _users: IBankUser;
-	private _cards: ICard;
+	private _users: Array<IBankUser>;
+	private _cards: Array<ICard>;
 
-	constructor(users: IBankUser, cards: ICard) {
+	constructor(users: Array<IBankUser>, cards: Array<ICard>) {
 		this._users = users;
 		this._cards = cards;
 	}
 
 	public authorize(userId: string, cardId: string, cardPin: string): boolean {
-		for (let users of this._users) {
-			if (users.id === userId) {
-				if (users.cards.find(card => card.id === cardId && card.pin === cardPin)){
-					return true;
-					}
-				}
-			}
-			return false;
-		}
+		let user = this._users.find(x => x.id === userId);
+		if(!user) return false;
+		let card = user.cards.find(x=> x.id === cardId);
+		if(!card) return false;
+		return card.pin === cardPin;
 	}
 
-	public getCardById(cardId: string): ICards {
-		for (let card of this._cards) {
-			if (card.id === cardId) {
-				return card;
-			}
-		}
-		return null;
-
+	public getCardById(cardId: string): ICard | undefined {
+		return this._cards.find(x=> x.id === cardId);
 	}
 
 	public isCardTiedToUser(cardId: string): boolean {
-		for (let user of this._users) {
-			for (let userCard of user.cards) {
-				if (userCard.id === cardId) {
-					return true;
-				}
-			}
-		}
-		return false;
-
+		return this._users.filter(x=> x.cards.find(y=> y.id === cardId)).length > 0;
 	}
+}
