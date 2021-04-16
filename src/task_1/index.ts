@@ -50,6 +50,16 @@ export class MoneyRepository {
 		}
 	}
 
+	private _createMoneyUnitFromUnit(count: number, unit: IMoneyUnit): IMoneyUnit {
+		return {
+			moneyInfo: {
+				denomination: unit.moneyInfo.denomination,
+				currency: unit.moneyInfo.currency,
+			},
+			count: count,
+		}
+	}
+
 	public giveOutMoney(count: number, currency: Currency): IMoneyUnit[] {
 		this._sortRepository();
 		//Промежуточное хранилище для того, чтобы фиксировать денеж. ед, которые надо будет удалить, если удасться "жадно" набрать сумму из хранилища 
@@ -62,12 +72,7 @@ export class MoneyRepository {
 				const val = tmpCount <= unit.count ? tmpCount : unit.count;
 				count -= val === tmpCount ? val * denomination : unit.count * denomination;
 				countDenominationsPair.push([val, unit]);
-				result.push({ 
-					count: val, 
-					moneyInfo: { 
-					denomination: unit.moneyInfo.denomination, 
-					currency: unit.moneyInfo.currency
-				}});
+				result.push(this._createMoneyUnitFromUnit(val, unit));
 				if (count === 0) {
 					//Ниже следует метод для изъятия из хранилища купюр.
 					this._removeFromRepos(countDenominationsPair);
