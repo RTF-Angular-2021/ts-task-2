@@ -42,13 +42,13 @@ export class BankOffice {
 	}
 
 	public authorize(userId: string, cardId: string, cardPin: string): boolean {
-		this._users.forEach(user => {
+		for(const user of this._users) {
 			if (user.id === userId){
 				if (user.cards.find(card => card.id === cardId && card.pin === cardPin)){
 					return true;
 				}
 			}
-		})
+		}
 		return false;
 	}
 

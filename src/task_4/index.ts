@@ -27,17 +27,10 @@ export class CurrencyConverterModule {
 
 	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit[]): IMoneyUnit[] {
 		const coeff = fromCurrency === Currency.RUB ? 70 : 1/70;
-		let result: IMoneyUnit[] = [];
-		moneyUnits.forEach(moneyUnit => {
-			const tmpObj: IMoneyUnit = {
-				moneyInfo: {
-					denomination: (+moneyUnit.moneyInfo.denomination * coeff).toString(),
-					currency: toCurrency,
-				},
-				count: moneyUnit.count,
-			}
-			result.push(tmpObj);
-		})
-		return result;
+		const count = moneyUnits.reduce((accumulator, unit) => {
+			return accumulator + unit.count * +unit.moneyInfo.denomination;
+		}, 0) * coeff;
+
+		return this._moneyRepository.giveOutMoney(count, toCurrency);
 	}
 }

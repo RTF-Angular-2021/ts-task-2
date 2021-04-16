@@ -32,33 +32,50 @@ export interface IMoneyUnit {
 
 export class MoneyRepository {
 	private _repository: IMoneyUnit[];
-	private static readonly _usNominal: number[] = [100, 50, 20, 10, 5, 2, 1];
-	private static readonly _ruNominal: number[] = [5000, 2000, 1000, 500, 200, 100, 50];
 	constructor(initialRepository: IMoneyUnit[]) {
 		this._repository = initialRepository;
 	}
 
-	private static _splitAmount(value: number, currency: Currency): [string, number][] {
-		let result: [string, number][] = [];
-		const denominations: number[] = currency === Currency.RUB ? this._ruNominal : this._usNominal;
-		denominations.forEach(nominal => {
-			if (nominal < value){
-				const count: number = Math.floor(value / nominal);
-				result.push([`${nominal}${Currency[currency]}`, count]);
-				value -= nominal * count; 
-			}
-		})
-		return result;
+	private _sortRepository() {
+		this._repository.sort((a, b) => {
+			const tmpA = Number(a.moneyInfo.denomination.match(/\d/g).join());
+			const tmpB = Number(b.moneyInfo.denomination.match(/\d/g).join());
+			return tmpA > tmpB ? -1 : 1;
+		});
 	}
 
-	public giveOutMoney(count: number, currency: Currency): boolean {
-		const nominalCountPair = MoneyRepository._splitAmount(count, currency);
-		nominalCountPair.forEach(pair => {
-			if (!this._repository.find(unit => unit.moneyInfo.denomination === pair[0] && unit.count >= pair[1])) {
-				return false;
+	private _removeFromRepos(pairArray: [number, IMoneyUnit][]) {
+		for(const pair of pairArray) {
+			pair[1].count -= pair[0];
+		}
+	}
+
+	public giveOutMoney(count: number, currency: Currency): IMoneyUnit[] {
+		this._sortRepository();
+		//Промежуточное хранилище для того, чтобы фиксировать денеж. ед, которые надо будет удалить, если удасться "жадно" набрать сумму из хранилища 
+		const countDenominationsPair: [number, IMoneyUnit][] = [];
+		const result: IMoneyUnit[] = [];
+		for(const unit of this._repository) {
+			const denomination = Number(unit.moneyInfo.denomination.match(/\d/g).join());
+			if(denomination <= count) {
+				const tmpCount = Math.floor(count / denomination);
+				const val = tmpCount <= unit.count ? tmpCount : unit.count;
+				count -= val === tmpCount ? val * denomination : unit.count * denomination;
+				countDenominationsPair.push([val, unit]);
+				result.push({ 
+					count: val, 
+					moneyInfo: { 
+					denomination: unit.moneyInfo.denomination, 
+					currency: unit.moneyInfo.currency
+				}});
+				if (count === 0) {
+					//Ниже следует метод для изъятия из хранилища купюр.
+					this._removeFromRepos(countDenominationsPair);
+					return result;
+				}
 			}
-		})
-		return true;
+		}
+		return null;
 	}
 
 	public takeMoney(moneyUnits: IMoneyUnit[]) {
