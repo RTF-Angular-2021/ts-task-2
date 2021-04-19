@@ -27,23 +27,28 @@ export class CurrencyConverterModule
 		this._moneyRepository = initialMoneyRepository;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit[]): IMoneyUnit[]
-	{
-		const c = fromCurrency === Currency.RUB ? 70 : 1/70;
-		let res: IMoneyUnit[] = [];
-		moneyUnits.forEach(moneyUnit => 
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit): number {
+		if (fromCurrency === toCurrency)
 			{
-			const tmpObj: IMoneyUnit = 
-			{
-				moneyInfo: 
-				{
-					denomination: (+moneyUnit.moneyInfo.denomination * c).toString(),
-					currency: toCurrency,
-				},
-				count: moneyUnit.count,
+				return 0;
 			}
-			res.push(tmpObj);
-		})
-		return res;
+
+		let denomination = parseInt(moneyUnits.moneyInfo.denomination);
+
+		if (fromCurrency === Currency.RUB)
+			{
+				if (this._moneyRepository.giveOutMoney(moneyUnits.count * denomination / 70, toCurrency))
+				{
+					return  moneyUnits.count * denomination / 70;
+				}
+			}
+		if (fromCurrency === Currency.USD) 
+			{
+				if (this._moneyRepository.giveOutMoney(moneyUnits.count * denomination * 70, toCurrency))
+				{
+					return moneyUnits.count * denomination * 70;
+				}
+			}
+
 	}
 } 

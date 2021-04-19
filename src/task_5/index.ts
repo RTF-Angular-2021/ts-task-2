@@ -26,9 +26,8 @@ class BankTerminal {
 	private _moneyRepository: MoneyRepository;
 	private _userSettingsModule: UserSettingsModule;
 	private _currencyConverterModule: CurrencyConverterModule;
-	private _currentCard: ICard;
 	private _authorizedUser: IBankUser;
-	private _usersCard: ICard;
+	private _Card: ICard;
 
 	constructor(initBankOffice: BankOffice, initMoneyRepository: MoneyRepository) {
 		this._moneyRepository = initMoneyRepository;
@@ -41,7 +40,7 @@ class BankTerminal {
 		if (this._bankOffice.authorize(user.id, card.id, cardPin))
 		{
 			this._authorizedUser = user;
-			this._currentCard = card;
+			this._Card = card;
 			return true;
 		}
 		return false;
@@ -49,14 +48,15 @@ class BankTerminal {
 
 	public takeUsersMoney(moneyUnits: IMoneyUnit[]): boolean 
 	{
-		if (this._authorizedUser != undefined) 
+		if (this._authorizedUser != undefined)
 		{
 			this._moneyRepository.takeMoney(moneyUnits);
 
-			for (const moneyUnit of moneyUnits) 
+			for(let unit of moneyUnits)
 			{
-				const factor = this._currentCard.currency === moneyUnit.moneyInfo.currency ? 1 : (this._currentCard.currency === Currency.RUB ? 70 : (1 / 70))
-				this._currentCard.balance += moneyUnit.count * parseInt(moneyUnit.moneyInfo.denomination) * factor;
+				const i = this._Card.currency === unit.moneyInfo.currency ? 1 :
+					(this._Card.currency === Currency.RUB ? 70 : (1/70))
+				this._Card.balance += unit.count * parseInt(unit.moneyInfo.denomination) * i;
 			}
 			return true;
 		}
@@ -65,41 +65,30 @@ class BankTerminal {
 
 	public giveOutUsersMoney(count: number): boolean
 	{
-		if (this._authorizedUser != undefined) 
+		if (this._authorizedUser != undefined)
 		{
-			if (this._moneyRepository.giveOutMoney(count, this._currentCard.currency)) 
+			if (this._moneyRepository.giveOutMoney(count, this._Card.currency))
 			{
-				this._currentCard.balance -= count;
-
+				this._Card.balance = count -1;
 				return true;
 			}
 		}
-
 		return false;
 	}
 
-	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: any): boolean 
+	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: string)
 	{
-		if (this._authorizedUser != undefined) 
+		if (this._authorizedUser != undefined)
 		{
-			this._userSettingsModule.user = this._authorizedUser;
-			return this._userSettingsModule.changeUserSettings(option, argsForChangeFunction);
+			this._userSettingsModule.changeUserSettings(option, argsForChangeFunction);
 		}
-
-		return false;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit[]): boolean 
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit) 
 	{
-		const amount = moneyUnits.reduce((sum, unit) => 
+		if (this._authorizedUser != undefined)
 		{
-			return sum + unit.count * (+unit.moneyInfo.denomination.match(/\d/g).join(''));
-		}, 0);
-		if (this.giveOutUsersMoney(amount))
-		{
-			const convertUnits = this._currencyConverterModule.convertMoneyUnits(fromCurrency, toCurrency, moneyUnits);
-			return this.takeUsersMoney(convertUnits);
+			this._currencyConverterModule.convertMoneyUnits(fromCurrency, toCurrency, moneyUnits);
 		}
-		return false;
 	}
 }
