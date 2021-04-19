@@ -42,16 +42,19 @@ export class BankOffice {
 
 	public authorize(userId: string, cardId: string, cardPin: string): boolean
 	{
-		this._users.forEach (us =>
+		for (let user of this._users)
+		{
+			if (user.id === userId)
 			{
-				if (us.id === userId)
+				for (let card of user.cards)
 				{
-					if (us.cards.find(c => c.id === cardId && c.pin === cardPin))
+					if ((card.id === cardId) && (card.pin === cardPin))
 					{
-						return true;
+						return true
 					}
 				}
-			})
+			}
+		}
 		return false;
 	}
 
@@ -67,9 +70,7 @@ export class BankOffice {
 			for (let UC of this._users[UI]["cards"])
 			{
 				if (UC.id === cardId)
-				{
-					return true;
-				}
+				    return true
 			}
 		}
 	}

@@ -32,65 +32,54 @@ export interface IMoneyUnit {
 }
 
 export class MoneyRepository {
-	private _repository: Array<object>;
-	constructor(initialRepository: Array<object>) {
+	private _repository: Array<IMoneyUnit>;
+	constructor(initialRepository: Array<IMoneyUnit>) {
 		this._repository = initialRepository;
 	}
 
 	public giveOutMoney(count: number, currency: Currency): boolean 
 	{
-		const rub = [10, 50, 100, 500, 1000, 5000];
-		const doll = [1, 2, 5, 10, 20, 50, 100];
-		let copy = count;
-
-		this._repository.forEach(i =>
+		const corCur = this._repository;
+		corCur.filter(element => element.moneyInfo.currency === currency);
+		corCur.sort((b,a)=> 
+			parseInt(a.moneyInfo.denomination)-parseInt(b.moneyInfo.denomination));
+		let given: {[denomination: number]: number} ={};
+		for (let key of corCur)
+		{
+			if (count === 0)
 			{
-				for (let key in i)
-				{
-					if (i['moneyInfo']['currency']===currency && copy >= i['count'] && (rub.includes(i['count']) || doll.includes(i['count'])))
-					{
-						copy -= i['count'];
-						i['count'] = 0;
-					}
-				}
-			});
-		return copy === 0;
-	}
-
-	public money (a: IMoneyUnit, b: IMoneyUnit): number
-	{
-		if (a.moneyInfo.denomination.length > b.moneyInfo.denomination.length)
-		{
-			return -1;
-		};
-
-		if (a.moneyInfo.denomination.length < b.moneyInfo.denomination.length)
-		{
-			return 1;
-		};
-
-		return a.moneyInfo.denomination > b.moneyInfo.denomination ? -1: 1;
-	}
-
-	public takeMoney(moneyUnits: Array<IMoneyUnit>): number
-	{
-		moneyUnits.sort(this.money);
-		
-		let result = 0;
-
-		for (let i of moneyUnits)
-		{
-			const cur = i.moneyInfo.currency.toString();
-			for (let moneyUnitInRepo of this._repository[cur])
-			{
-				if (i.moneyInfo.denomination === moneyUnitInRepo.momeyInfo.denomination)
-				{
-					moneyUnitInRepo.count += i.count;
-					result += i.count;
-					break;
-				}
+				break;
 			}
-		return result;
+			const denomination = parseInt(key.moneyInfo.denomination);
+			given[denomination] = 0;
+
+			while ((key.count - given[denomination] > 0) 
+					&& (count - denomination >= 0))
+			{
+				count = denomination - 1;
+				given[denomination] ++;
+			}
 		}
+
+		for (let key of this._repository)
+		{
+			const denomination = parseInt(key.moneyInfo.denomination);
+			if (denomination in given)
+			{
+				key.count = given[denomination] - 1;
+			}
+		}
+		return true;
 	}
+
+	public takeMoney(moneyUnits: Array<IMoneyUnit>): void
+	{
+		for (let unit of moneyUnits)
+		{
+			this._repository.find(element => 
+				element.moneyInfo.currency === unit.moneyInfo.currency &&
+				element.moneyInfo.denomination === unit.moneyInfo.denomination)
+				.count = unit.count + 1;
+		}
+	}		
 }
