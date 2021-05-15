@@ -32,15 +32,11 @@ export interface IMoneyUnit {
 
 export class MoneyRepository {
 	private _repository: Array<IMoneyUnit>;
-	constructor(initialRepository: IMoneyUnit|IMoneyUnit[]) {
-		if(this.instanceOfMoneyUnit(initialRepository))
-			this._repository.push(<IMoneyUnit>initialRepository)
-		else{
+	constructor(initialRepository: IMoneyUnit[]) {
 			for(let item in <IMoneyUnit[]>initialRepository){
 				if(this.instanceOfMoneyUnit(item))
 					this._repository.push(<IMoneyUnit><unknown>item)
 			}
-		}
 	};
 
 	private instanceOfMoneyUnit(item: any):boolean {
@@ -52,17 +48,40 @@ export class MoneyRepository {
 	}
 
 	public giveOutMoney(count: number, currency: Currency): boolean {
-		if(count < 0)
-			return false;
-			//throw new Error("Value cannot be negative")
-		let thousandRadix = Math.floor(count / 1000);
-		let hundredRadix = Math.floor(count %1000/100);
-		let demihundredRadix = Math.floor(count %1000 % 100 / 50);
-		if(count - (thousandRadix*1000 + hundredRadix*100 + demihundredRadix*50) !== 0)
-			return false;
-			//throw new Error("Value must be divisible by 50")
-		this.getMoneyUnit(currency).count -= thousandRadix*1000 + hundredRadix*100 + demihundredRadix*50;
-		return true
+		let givenMoney: Array<IMoneyUnit> = new Array<IMoneyUnit>();
+		this._repository
+			.filter(function (unit){
+				return unit.moneyInfo.currency === currency
+			})
+			.sort(function (a, b) {
+				return Number(a.moneyInfo.denomination) > Number(b.moneyInfo.denomination) ? -1 : 1;
+			})
+			.forEach(unit => {
+				let currentDenomination = Number(unit.moneyInfo.denomination);
+				let amount = Math.min((count - count % currentDenomination) / currentDenomination, unit.count);
+				count -= amount * currentDenomination;
+				givenMoney.push({
+					moneyInfo:{
+						denomination: unit.moneyInfo.denomination,
+						currency: unit.moneyInfo.currency
+					},
+					count: amount
+				});
+			});
+		if(count === 0){
+			this.updateRepository(givenMoney, currency);
+			return true;
+		}
+		return false;
+	}
+
+	public updateRepository(givenMoney: Array<IMoneyUnit>, currency: Currency):void {
+		this._repository.forEach((value, index) => {
+			let current = givenMoney.find(x => x.moneyInfo.denomination === this._repository[index].moneyInfo.denomination);
+			if(this._repository[index].moneyInfo.currency === currency && current){
+				this._repository[index].count -= current.count;
+			}
+		});
 	}
 
 	public takeMoney(moneyUnits: IMoneyUnit[]): boolean {

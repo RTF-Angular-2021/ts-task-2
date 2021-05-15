@@ -33,13 +33,11 @@ export class UserSettingsModule {
 	}
 
 	private changeUserName(newName: string): boolean {
-		this._user.name = newName;
-		return this._user.name === newName;
+		return !!this._user.name;
 	}
 
 	private changeUserSurname(newSurname: string): boolean {
-		this._user.surname = newSurname;
-		return this._user.surname === newSurname;
+		return !!this._user.surname;
 	}
 
 	private registerForUserNewCard(newCardId: string): boolean {

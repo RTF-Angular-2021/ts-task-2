@@ -46,12 +46,13 @@ export class BankOffice {
 	}
 
 	public getCardById(cardId: string): ICard {
-		return this._cards.find(e => e.id === cardId);
+		let card = this._cards.find(e => e.id === cardId);
+		if(card)
+			return card;
+		throw new Error("Card not found");
 	}
 
 	public isCardTiedToUser(cardId: string): boolean {
-		for (const user of this._users)
-			if (user.cards.find(e => e.id === cardId) != undefined)
-				return true;
+		return !!this._users.find((user) => user.cards.find(card => cardId == card.id));
 	}
 }

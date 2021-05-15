@@ -26,20 +26,27 @@ export class CurrencyConverterModule {
 	}
 
 	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: Array<IMoneyUnit>): any {
-		for(let unit of moneyUnits)
+		moneyUnits.forEach(unit =>
 		{
 			let denomination = parseInt(unit.moneyInfo.denomination)
 			switch (fromCurrency + toCurrency) {
 				case Currency.RUB + Currency.USD:
 					 this._moneyRepository.giveOutMoney(unit.count * denomination / 70, toCurrency) ? unit.count * denomination / 70 : 0;
+					 break;
+
 				case Currency.USD + Currency.RUB:
 					 this._moneyRepository.giveOutMoney(unit.count * denomination * 70, toCurrency) ? unit.count * denomination * 70 : 0;
+					 break;
+
 				case Currency.RUB + Currency.RUB:
 					 this._moneyRepository.giveOutMoney(unit.count * denomination, toCurrency) ? unit.count * denomination : 0;
+					 break;
+
 				case Currency.USD + Currency.USD:
 					 this._moneyRepository.giveOutMoney(unit.count * denomination, toCurrency) ? unit.count * denomination : 0;
-		}
+					 break;
+			}
+		});
 		return this._moneyRepository;
-	}
 	}
 }
