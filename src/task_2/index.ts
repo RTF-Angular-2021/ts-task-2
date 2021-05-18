@@ -1,23 +1,6 @@
-/** Задача 1 - BankOffice
- * Имеется класс BankOffice. Который должен хранить пользователей и банковские карты.
- * Пользователи банка могу иметь карту, а могут не иметь.
- * Карты могут иметь своего владельца, а могут не иметь.
- * Требуется:
- * 1) Реализовать классу BankOffice 3 метода:
- * 		1.1) authorize - позволяет авторизировать пользователя:
- * 			 Пользователь считается авторизованым, если карта принадлежит ему и пин-код введен корректно
- * 			 Принимает аргументы userId - id пользователя, cardId - id банковской карты, cardPin - пин-код карты
- * 			 Если пользователь был успешно авторизован, то метод возвращает true, иначе false
- * 		1.2) getCardById - позволяет получить объект банковской карты из хранилища по id карты
- *		1.3) isCardTiedToUser - позволяет по id карты узнать, привзяана ли карта к какому-нибудь пользователю
- *			 возвращает true - если карта привязана к какому-нибудь пользователю, false в ином случае
- * 2) Типизировать все свойства и методы класса MoneyRepository,
- * 	  пользуясь уже предоставленными интерфейсами (избавиться от всех any типов)
-*/
-
 import { Currency } from '../enums';
 
-interface ICard {
+export interface ICard {
 	id: string;
 	balance: number;
 	currency: Currency,
@@ -32,23 +15,34 @@ export interface IBankUser {
 }
 
 export class BankOffice {
-	private _users: any;
-	private _cards: any;
+	private _users: IBankUser[];
+	private _cards: ICard[];
 
-	constructor(users: any, cards: any) {
+	constructor(users: IBankUser[], cards: ICard[]) {
 		this._users = users;
 		this._cards = cards;
 	}
 
-	public authorize(userId: any, cardId: any, cardPin: any): any {
-
+	public getCardById(cardId: string): ICard | undefined {
+		let temp : ICard[] = this._cards.filter(x => x.id === cardId);
+		return temp.length === 0 ? undefined : temp[0];
 	}
 
-	public getCardById(cardId: any): any {
-
+	public isCardTiedToUser(cardId: string): boolean {
+		let flag = false;
+		let card : ICard | undefined = this.getCardById(cardId);
+		if (typeof card === "undefined") return false;
+		for (let user of this._users)
+			if (typeof card !== "undefined" && user.cards.indexOf(card) !== -1)
+				return true;
+		return flag;
 	}
 
-	public isCardTiedToUser(cardId: any): any {
-
+	public authorize(userId: string, cardId: string, cardPin: string): boolean {
+		let card : ICard;
+		let user : IBankUser = this._users.filter(x => x.id === userId)[0];
+		if (typeof user === "undefined") return false
+		card = user.cards.filter(x => x.id === cardId)[0];
+		return typeof card !== "undefined" ? cardPin === card.pin : false;
 	}
 }

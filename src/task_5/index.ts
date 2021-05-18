@@ -1,25 +1,8 @@
-/** Задача 5 - BankTerminal
- * Имеется класс BankTerminal. Класс представляет банковский терминал.
- * Требуется:
-  * 1) Реализовать классу BankTerminal 5 методjd:
- * 		1.1) authorize - позволяет авторизировать пользователя c помощью авторизации в BankOffice
- * 		1.2) takeUsersMoney - позволяет авторизованному пользователю положить денежные единицы
- * 			 в хранилище и пополнить свой баланс на карте
- *		1.3) giveOutUsersMoney - позволяет авторизованному пользователю снять денежные единицы
- * 			 с карты и получить их наличными из хранилища
- *		1.4) changeAuthorizedUserSettings - позволяет авторизованному пользователю изменить свои
- * 			 настройки с помощью методов UserSettingsModule
- *		1.5) convertMoneyUnits - позволяет авторизованному пользователю конвертировать валюту
- *			 с помощью методов CurrencyConverterModule
- * 2) Типизировать все свойства и методы класса BankTerminal,
- * 	  пользуясь уже предоставленными интерфейсами (избавиться от всех any типов)
-*/
-
-import { Currency, UserSettingOptions } from '../enums';
-import { MoneyRepository } from '../task_1';
-import { BankOffice, IBankUser } from '../task_2';
-import { UserSettingsModule } from '../task_3';
-import { CurrencyConverterModule } from '../task_4';
+import {Currency, UserSettingOptions} from '../enums';
+import {IMoneyUnit, MoneyRepository} from '../task_1';
+import {BankOffice, IBankUser, ICard} from '../task_2';
+import {UserSettingsModule} from '../task_3';
+import {CurrencyConverterModule} from '../task_4';
 
 class BankTerminal {
 	private _bankOffice: BankOffice;
@@ -35,23 +18,33 @@ class BankTerminal {
 		this._currencyConverterModule = new CurrencyConverterModule(initMoneyRepository);
 	}
 
-	public authorizeUser(user: any, card: any, cardPin: any): any {
-
+	public authorizeUser(user: IBankUser, card: ICard, cardPin: string): boolean {
+		if (this._bankOffice.authorize(user.id, card.id, cardPin)) {
+			this._authorizedUser = user;
+			return true;
+		}
+		return false;
 	}
 
-	public takeUsersMoney(moneyUnits: any): any {
-
+	public takeUsersMoney(moneyUnits: IMoneyUnit[]): void {
+		if (this._authorizedUser)  this._moneyRepository.takeMoney(moneyUnits);
 	}
 
-	public giveOutUsersMoney(count: any): any {
-
+	public giveOutUsersMoney(count: number, currency : Currency): boolean {
+		if (this._authorizedUser)
+			return this._moneyRepository.giveOutMoney(count, currency);
+		return false;
 	}
 
-	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
-
+	public changeAuthorizedUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
+		if (this._authorizedUser)
+			return this._userSettingsModule.changeUserSettings(option, argsForChangeFunction)
+		return false;
 	}
 
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
+	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit) : boolean {
+		if (this._authorizedUser)
+			return Boolean(this._currencyConverterModule.convertMoneyUnits(fromCurrency, toCurrency, moneyUnits));
+		return false;
 	}
 }
