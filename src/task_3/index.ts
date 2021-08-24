@@ -18,32 +18,47 @@
 */
 
 import { UserSettingOptions } from '../enums';
+import { BankOffice } from '../task_2';
+import { IBankUser } from '../types';
 
 export class UserSettingsModule {
-	private _bankOffice: any;
-	private _user: any;
+    private _bankOffice: BankOffice;
+    private _user: any;
 
-	public set user(user: any) {
-		this._user = user;
-	}
+    public set user(user: IBankUser) {
+        this._user = user;
+    }
 
-	constructor(initialBankOffice: any) {
-		this._bankOffice = initialBankOffice;
-	}
+    constructor(initialBankOffice: BankOffice) {
+        this._bankOffice = initialBankOffice;
+    }
 
-	private changeUserName(newName: any): any {
+    private changeUserName(newName: string): boolean {
+        if (this._user) {
+            this._user.name = newName;
+            return true;
+        }
+        return false;
+    }
 
-	}
+    private changeUserSurname(newSurname: string): boolean {
+        if (this._user) {
+            this._user.surname = newSurname;
+            return true;
+        }
+        return false;
+    }
 
-	private changeUserSurname(newSurname: any): any {
-
-	}
-
-	private registerForUserNewCard(newCardId: any): any {
-
-	}
-
-	public changeUserSettings(option: UserSettingOptions, argsForChangeFunction: any): any {
-
-	}
+    private registerForUserNewCard(newCardId: string): any {
+        if (!this._bankOffice.isCardTiedToUser(newCardId) && this._bankOffice.getCardById(newCardId)) {
+            this._user.cards.push(this._bankOffice.getCardById(newCardId));
+            return true;
+        }
+        return false;
+    }
+    public changeUserSettings(option: UserSettingOptions, argsForChangeFunction: string): boolean {
+        if (option === 0) return this.changeUserName(argsForChangeFunction);
+        else if (option === 1) return this.changeUserSurname(argsForChangeFunction);
+        else if (option === 2) return this.registerForUserNewCard(argsForChangeFunction);
+    }
 }

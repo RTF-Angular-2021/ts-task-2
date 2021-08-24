@@ -16,39 +16,37 @@
 */
 
 import { Currency } from '../enums';
-
-interface ICard {
-	id: string;
-	balance: number;
-	currency: Currency,
-	pin: string,
-}
-
-export interface IBankUser {
-	id: string;
-	name: string;
-	surname: string;
-	cards: Array<ICard>;
-}
+import { IBankUser, ICard } from '../types';
 
 export class BankOffice {
-	private _users: any;
-	private _cards: any;
+    private _users: Array<IBankUser>;
+    private _cards: ICard[];
 
-	constructor(users: any, cards: any) {
-		this._users = users;
-		this._cards = cards;
-	}
+    constructor(users: IBankUser[], cards: ICard[]) {
+        this._users = users;
+        this._cards = cards;
+    }
 
-	public authorize(userId: any, cardId: any, cardPin: any): any {
+    public authorize(userId: string, cardId: string, cardPin: string): boolean {
+		return this._users.filter(item => item.id === userId).some(el => el.cards.some(i => i.id === cardId && i.pin === cardPin))
+        // let checkCardAndUser = this._users.filter(item => {
+        //     if (item.id === userId) return item.cards.some(el => (el.id === cardId && el.pin === cardPin));
+        // });
+        // if (checkCardAndUser.length) return true;
+        // else return false;
+    }
 
-	}
+    public getCardById(cardId: string): ICard {
+        let cardObj: ICard;
+        this._cards.forEach(item => {
+            if (item.id === cardId) {
+                cardObj = item;
+            }
+        });
+        return cardObj;
+    }
 
-	public getCardById(cardId: any): any {
-
-	}
-
-	public isCardTiedToUser(cardId: any): any {
-
-	}
+    public isCardTiedToUser(cardId: string): boolean {
+        return this._users.some(item => item.cards.some(el => el.id === cardId));
+    }
 }
