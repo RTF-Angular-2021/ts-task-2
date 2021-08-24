@@ -16,15 +16,29 @@
 */
 
 import { Currency } from '../enums';
+import { MoneyRepository } from '../task_1';
+import { IMoneyUnit } from '../types';
 
 export class CurrencyConverterModule {
-	private _moneyRepository: any;
+    private _moneyRepository: MoneyRepository;
+    public oneUSD: number;
+    constructor(initialMoneyRepository: MoneyRepository) {
+        this._moneyRepository = initialMoneyRepository;
+        this.oneUSD = 70;
+    }
 
-	constructor(initialMoneyRepository: any) {
-		this._moneyRepository = initialMoneyRepository;
-	}
-
-	public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: any): any {
-
-	}
+    public convertMoneyUnits(fromCurrency: Currency, toCurrency: Currency, moneyUnits: IMoneyUnit[]): boolean {
+        // let currency = (fromCurrency === 0) ? "₽" : "$";
+        let amount = 0;
+        let checkMoneyUnitCurrency = moneyUnits.every(item => item.moneyInfo.currency === fromCurrency);
+        // console.log("Валюта соответствует fromCurrency:", checkMoneyUnitCurrency);
+        moneyUnits.forEach(el => amount += Number(el.count) * Number(el.moneyInfo.denomination));
+        if (amount % this.oneUSD === 0 && toCurrency === 1 && checkMoneyUnitCurrency) {
+            // console.log(`Сумма, которую получили: ${amount}${currency}`);        
+            return this._moneyRepository.giveOutMoney(amount / this.oneUSD, toCurrency);
+        } else if (toCurrency === 0 && checkMoneyUnitCurrency) {
+            return this._moneyRepository.giveOutMoney(amount * this.oneUSD, toCurrency);
+        }
+        return false;
+    }
 }
